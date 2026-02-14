@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Weather We Were</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400&display=swap');
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --warm: #121212;
+      --ink: #e8e4de;
+      --muted: #8a8480;
+      --accent: #c4956a;
+      --storm: #7fa8c9;
+      --player-h: 72px;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: var(--warm);
+      color: var(--ink);
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      line-height: 1.7;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- background texture (covers full page) ---- */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(196,149,106,.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 80%, rgba(127,168,201,.06) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      opacity: .03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 200px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ---- header ---- */
+    .header {
+      text-align: center;
+      padding: 2rem 2rem 1rem;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .genre {
+      font-size: .65rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .6rem;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 400;
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      line-height: 1.1;
+      margin-bottom: .25rem;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--storm);
+    }
+
+    .subtitle {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    /* ---- lyrics pane ---- */
+    .lyrics-pane {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      z-index: 1;
+      -webkit-overflow-scrolling: touch;
+
+      /* fade edges */
+      mask-image: linear-gradient(to bottom, transparent 0%, black 4%, black 92%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 4%, black 92%, transparent 100%);
+    }
+
+    .lyrics {
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 2rem 2rem 3rem;
+      text-align: center;
+    }
+
+    .lyrics section {
+      margin-bottom: 2rem;
+    }
+
+    .lyrics .label {
+      font-size: .6rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: .5rem;
+      transition: opacity .4s ease;
+    }
+
+    .lyrics .lyric-line {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+      line-height: 1.9;
+      color: var(--ink);
+      cursor: pointer;
+      transition: opacity .4s ease, transform .3s ease, color .4s ease;
+      padding: 1px 0;
+      letter-spacing: .01em;
+    }
+
+    .lyrics .lyric-line:hover {
+      color: var(--accent);
+    }
+
+    .lyrics .bridge .lyric-line,
+    .lyrics .final .lyric-line {
+      color: var(--storm);
+    }
+
+    .lyrics .bridge .lyric-line:hover,
+    .lyrics .final .lyric-line:hover {
+      color: var(--accent);
+    }
+
+    .lyrics .outro .lyric-line {
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .lyrics .outro .lyric-line:hover {
+      color: var(--accent);
+    }
+
+    .divider {
+      width: 30px;
+      height: 1px;
+      background: var(--accent);
+      margin: 2rem auto;
+      opacity: .35;
+    }
+
+    /* ---- synced lyrics mode ---- */
+    body.synced .lyrics .lyric-line {
+      opacity: .18;
+      transform: translateY(0);
+    }
+
+    body.synced .lyrics .lyric-line.lyric-near-2 {
+      opacity: .28;
+    }
+
+    body.synced .lyrics .lyric-line.lyric-near-1 {
+      opacity: .48;
+    }
+
+    body.synced .lyrics .lyric-line.lyric-active {
+      opacity: 1;
+      transform: scale(1.04);
+    }
+
+    body.synced .lyrics .label {
+      opacity: .25;
+    }
+
+    body.synced .lyrics .label.label-active {
+      opacity: 1;
+    }
+
+    body.synced .lyrics .divider {
+      opacity: .15;
+    }
+
+    /* ---- idle state: prompt to play ---- */
+    .idle-prompt {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      pointer-events: none;
+      transition: opacity .6s ease;
+    }
+
+    .idle-prompt span {
+      font-size: .7rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+
+    body.playing .idle-prompt {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .4; }
+      50% { opacity: .8; }
+    }
+
+    /* ---- player bar ---- */
+    .player-bar {
+      flex-shrink: 0;
+      height: var(--player-h);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0 1.5rem;
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid rgba(255,255,255,.06);
+      background: rgba(18,18,18,.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .player-bar .ctrl-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid var(--ink);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background .2s, transform .12s;
+    }
+
+    .player-bar .ctrl-btn:hover {
+      background: var(--ink);
+    }
+
+    .player-bar .ctrl-btn:hover svg { fill: var(--warm); }
+    .player-bar .ctrl-btn:active { transform: scale(.93); }
+
+    .player-bar .ctrl-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: var(--ink);
+      transition: fill .2s;
+    }
+
+    .player-bar .ctrl-btn.replay-btn {
+      border-color: var(--muted);
+    }
+
+    .player-bar .ctrl-btn.replay-btn svg {
+      fill: var(--muted);
+      width: 15px;
+      height: 15px;
+    }
+
+    .player-bar .ctrl-btn.replay-btn:hover {
+      border-color: var(--ink);
+      background: var(--ink);
+    }
+
+    .player-bar .ctrl-btn.replay-btn:hover svg {
+      fill: var(--warm);
+    }
+
+    .progress-group {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      min-width: 0;
+    }
+
+    .progress-group .time {
+      font-size: .65rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+      width: 3em;
+    }
+
+    .progress-group .time.time-end {
+      text-align: right;
+    }
+
+    .progress-wrap {
+      flex: 1;
+      height: 3px;
+      background: rgba(255,255,255,.12);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--ink);
+      border-radius: 2px;
+      transition: width .1s linear;
+    }
+
+    /* ---- reveal animation ---- */
+    .reveal {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ---- end screen ---- */
+    .end-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .8s ease;
+    }
+
+    .end-screen.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .end-screen .end-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 1.5rem;
+    }
+
+    .end-screen .replay-big {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 1.5px solid var(--ink);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .25s, transform .15s;
+    }
+
+    .end-screen .replay-big:hover {
+      background: var(--ink);
+    }
+
+    .end-screen .replay-big:hover svg { fill: var(--warm); }
+    .end-screen .replay-big:active { transform: scale(.93); }
+
+    .end-screen .replay-big svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--ink);
+      transition: fill .25s;
+    }
+
+    .end-screen .replay-label {
+      margin-top: .8rem;
+      font-size: .65rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- header -->
+<header class="header">
+  <p class="genre">indie folk &middot; ballad</p>
+  <h1>The Weather <em>We Were</em></h1>
+  <p class="subtitle">Some loves don&rsquo;t end, they rearrange</p>
+</header>
+
+<!-- lyrics pane -->
+<div class="lyrics-pane" id="lyricsPane">
+  <div class="idle-prompt" id="idlePrompt"><span>press play</span></div>
+
+  <div class="end-screen" id="endScreen">
+    <div class="end-title">The Weather We Were</div>
+    <button class="replay-big" id="replayBig" aria-label="Replay">
+      <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+    </button>
+    <div class="replay-label">replay</div>
+  </div>
+
+  <main class="lyrics" id="lyricsMain">
+
+    <section class="reveal">
+      <div class="label">Verse 1</div>
+      <p class="lyric-line" data-time="18.3">You were neon in a darkened room</p>
+      <p class="lyric-line" data-time="22.3">Laughing like nothing could touch you</p>
+      <p class="lyric-line" data-time="27.3">Every eye turned like they knew your name</p>
+      <p class="lyric-line" data-time="30.7">But I was the one who stayed</p>
+    </section>
+
+    <section class="reveal">
+      <p class="lyric-line" data-time="35.4">You came home tasting like gin and smoke</p>
+      <p class="lyric-line" data-time="39.6">City lights in your tangled coat</p>
+      <p class="lyric-line" data-time="44.3">I tried to love you steady and slow</p>
+      <p class="lyric-line" data-time="48.0">But you burned like summer on my throat</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="reveal">
+      <div class="label">Pre-Chorus</div>
+      <p class="lyric-line" data-time="53.4">You said you were done with the midnight spin</p>
+      <p class="lyric-line" data-time="57.8">Done with drowning just to feel something</p>
+      <p class="lyric-line" data-time="62.1">I wanted to believe you then</p>
+      <p class="lyric-line" data-time="65.6">God, I wanted to believe</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="reveal">
+      <div class="label">Chorus</div>
+      <p class="lyric-line" data-time="71.5">We were fire in a little house</p>
+      <p class="lyric-line" data-time="74.6">Brooklyn walls couldn&rsquo;t hold us down</p>
+      <p class="lyric-line" data-time="77.7">You were storm and I was ground</p>
+      <p class="lyric-line" data-time="80.9">Trying to keep you safe</p>
+    </section>
+
+    <section class="reveal">
+      <p class="lyric-line" data-time="84.0">You were wild but you were mine</p>
+      <p class="lyric-line" data-time="87.0">And I was yours in the quiet times</p>
+      <p class="lyric-line" data-time="90.0">If love&rsquo;s a line we walk half-blind</p>
+      <p class="lyric-line" data-time="93.0">We were brave, weren&rsquo;t we?</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="reveal">
+      <div class="label">Verse 2</div>
+      <p class="lyric-line" data-time="97.5">Bella sleeping by your side</p>
+      <p class="lyric-line" data-time="100.7">Norm keeping watch like he always tried</p>
+      <p class="lyric-line" data-time="105.0">Dogs don&rsquo;t ask where you&rsquo;ve been</p>
+      <p class="lyric-line" data-time="109.2">They just love you when you walk back in</p>
+    </section>
+
+    <section class="reveal">
+      <p class="lyric-line" data-time="113.5">Suitcases leaning by the stairs</p>
+      <p class="lyric-line" data-time="118.7">Maps and miles and borrowed air</p>
+      <p class="lyric-line" data-time="122.7">Louisiana heat, Atlantic cold</p>
+      <p class="lyric-line" data-time="127.6">We kept running but we never slowed</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="reveal">
+      <div class="label">Pre-Chorus</div>
+      <p class="lyric-line" data-time="132.8">You&rsquo;d raise your voice like thunder breaking</p>
+      <p class="lyric-line" data-time="141.6">Then hold me like the sky was shaking</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="reveal">
+      <div class="label">Chorus</div>
+      <p class="lyric-line" data-time="148.0">We were fire in a little house</p>
+      <p class="lyric-line" data-time="151.0">Burning bright then burning out</p>
+      <p class="lyric-line" data-time="154.0">You were storm and I was doubt</p>
+      <p class="lyric-line" data-time="157.5">Trying to hold the line</p>
+    </section>
+
+    <section class="reveal">
+      <p class="lyric-line" data-time="160.9">You were hurt and you were hope</p>
+      <p class="lyric-line" data-time="164.2">And I tied my heart around your rope</p>
+      <p class="lyric-line" data-time="167.5">If love&rsquo;s a tide that pulls and goes</p>
+      <p class="lyric-line" data-time="170.7">We were deep, weren&rsquo;t we?</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="reveal bridge">
+      <div class="label">Bridge</div>
+      <p class="lyric-line" data-time="173.9">Maybe you&rsquo;re sober now</p>
+      <p class="lyric-line" data-time="176.8">Maybe I&rsquo;m older now</p>
+      <p class="lyric-line" data-time="179.7">Maybe we both just needed space</p>
+    </section>
+
+    <section class="reveal bridge">
+      <p class="lyric-line" data-time="182.5">Maybe the bar lights fade</p>
+      <p class="lyric-line" data-time="185.8">Maybe the sharp words change</p>
+      <p class="lyric-line" data-time="189.2">Maybe we meet again halfway</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="reveal final">
+      <div class="label">Final Chorus</div>
+      <p class="lyric-line" data-time="196.1">We were weather, you and I</p>
+      <p class="lyric-line" data-time="199.0">Blue sky turning violent skies</p>
+      <p class="lyric-line" data-time="202.0">Still I see you in my mind</p>
+      <p class="lyric-line" data-time="205.0">Soft and golden</p>
+    </section>
+
+    <section class="reveal final">
+      <p class="lyric-line" data-time="209.4">If you knock on my door one night</p>
+      <p class="lyric-line" data-time="212.1">With clear eyes and a steady light</p>
+      <p class="lyric-line" data-time="214.8">I don&rsquo;t know if I&rsquo;d let you inside</p>
+      <p class="lyric-line" data-time="217.5">But I&rsquo;d want to</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="reveal outro">
+      <div class="label">Outro</div>
+      <p class="lyric-line" data-time="222.0">Some loves don&rsquo;t end, they rearrange</p>
+      <p class="lyric-line" data-time="226.0">Like summer turning into rain</p>
+      <p class="lyric-line" data-time="230.8">And I still taste your name</p>
+      <p class="lyric-line" data-time="236.0">When it storms</p>
+    </section>
+
+  </main>
+</div>
+
+<!-- player bar -->
+<div class="player-bar">
+  <button class="ctrl-btn" aria-label="Play" id="playBtn">
+    <svg id="iconPlay" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+    <svg id="iconPause" viewBox="0 0 24 24" style="display:none"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
+  </button>
+  <div class="progress-group">
+    <span class="time" id="curTime">0:00</span>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <span class="time time-end" id="durTime">0:00</span>
+  </div>
+  <button class="ctrl-btn replay-btn" aria-label="Replay" id="replayBtn">
+    <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+  </button>
+</div>
+
+<script>
+  const audio = new Audio('song.wav');
+  const playBtn = document.getElementById('playBtn');
+  const iconPlay = document.getElementById('iconPlay');
+  const iconPause = document.getElementById('iconPause');
+  const progressBar = document.getElementById('progressBar');
+  const progressWrap = document.getElementById('progressWrap');
+  const curTime = document.getElementById('curTime');
+  const durTime = document.getElementById('durTime');
+  const replayBtn = document.getElementById('replayBtn');
+  const replayBig = document.getElementById('replayBig');
+  const lyricsPane = document.getElementById('lyricsPane');
+  const lyricsMain = document.getElementById('lyricsMain');
+  const idlePrompt = document.getElementById('idlePrompt');
+  const endScreen = document.getElementById('endScreen');
+
+  function fmt(s) {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return m + ':' + String(sec).padStart(2, '0');
+  }
+
+  // --- audio events ---
+  audio.addEventListener('loadedmetadata', () => durTime.textContent = fmt(audio.duration));
+
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    progressBar.style.width = (audio.currentTime / audio.duration * 100) + '%';
+    curTime.textContent = fmt(audio.currentTime);
+    syncLyrics(audio.currentTime);
+  });
+
+  audio.addEventListener('ended', () => {
+    iconPlay.style.display = '';
+    iconPause.style.display = 'none';
+    document.body.classList.remove('playing');
+    endScreen.classList.add('visible');
+    // keep synced state but clear active highlight
+    lyricLines.forEach(el => el.classList.remove('lyric-active', 'lyric-near-1', 'lyric-near-2'));
+    document.querySelectorAll('.label').forEach(el => el.classList.remove('label-active'));
+    currentIdx = -1;
+  });
+
+  // --- play / pause ---
+  function doPlay() {
+    audio.play();
+    iconPlay.style.display = 'none';
+    iconPause.style.display = '';
+    document.body.classList.add('playing');
+    endScreen.classList.remove('visible');
+    enterSyncMode();
+  }
+
+  function doPause() {
+    audio.pause();
+    iconPlay.style.display = '';
+    iconPause.style.display = 'none';
+  }
+
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) doPlay();
+    else doPause();
+  });
+
+  // --- replay ---
+  function doReplay() {
+    audio.currentTime = 0;
+    currentIdx = -1;
+    lyricLines.forEach(el => el.classList.remove('lyric-active', 'lyric-near-1', 'lyric-near-2'));
+    document.querySelectorAll('.label').forEach(el => el.classList.remove('label-active'));
+    lyricsPane.scrollTop = 0;
+    endScreen.classList.remove('visible');
+    doPlay();
+  }
+
+  replayBtn.addEventListener('click', doReplay);
+  replayBig.addEventListener('click', doReplay);
+
+  // --- seek ---
+  progressWrap.addEventListener('click', e => {
+    const ratio = e.offsetX / progressWrap.offsetWidth;
+    audio.currentTime = ratio * audio.duration;
+    endScreen.classList.remove('visible');
+    if (audio.paused) doPlay();
+  });
+
+  // --- synced lyrics ---
+  const lyricLines = Array.from(document.querySelectorAll('.lyric-line'));
+  const lyricTimes = lyricLines.map(el => parseFloat(el.dataset.time));
+  let currentIdx = -1;
+  let syncActive = false;
+
+  function enterSyncMode() {
+    if (syncActive) return;
+    syncActive = true;
+    document.body.classList.add('synced');
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+  }
+
+  function syncLyrics(time) {
+    if (!syncActive) return;
+
+    let idx = -1;
+    for (let i = lyricTimes.length - 1; i >= 0; i--) {
+      if (time >= lyricTimes[i]) { idx = i; break; }
+    }
+
+    if (idx === currentIdx) return;
+    currentIdx = idx;
+
+    lyricLines.forEach(el => el.classList.remove('lyric-active', 'lyric-near-1', 'lyric-near-2'));
+    document.querySelectorAll('.label').forEach(el => el.classList.remove('label-active'));
+
+    if (idx < 0) return;
+
+    lyricLines[idx].classList.add('lyric-active');
+    if (idx - 1 >= 0) lyricLines[idx - 1].classList.add('lyric-near-1');
+    if (idx + 1 < lyricLines.length) lyricLines[idx + 1].classList.add('lyric-near-1');
+    if (idx - 2 >= 0) lyricLines[idx - 2].classList.add('lyric-near-2');
+    if (idx + 2 < lyricLines.length) lyricLines[idx + 2].classList.add('lyric-near-2');
+
+    const section = lyricLines[idx].closest('section');
+    const label = section && section.querySelector('.label');
+    if (label) label.classList.add('label-active');
+
+    // scroll within the lyrics pane, not the whole page
+    const paneRect = lyricsPane.getBoundingClientRect();
+    const lineRect = lyricLines[idx].getBoundingClientRect();
+    const offset = lineRect.top - paneRect.top - paneRect.height / 2 + lineRect.height / 2;
+    lyricsPane.scrollBy({ top: offset, behavior: 'smooth' });
+  }
+
+  // click-to-seek on lyric lines
+  lyricLines.forEach((el, i) => {
+    el.addEventListener('click', () => {
+      audio.currentTime = lyricTimes[i];
+      endScreen.classList.remove('visible');
+      if (audio.paused) doPlay();
+      else enterSyncMode();
+    });
+  });
+
+  // --- scroll reveal (uses lyrics pane as root) ---
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { root: lyricsPane, threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+
+</body>
+</html>
