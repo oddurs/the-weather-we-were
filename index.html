@@ -3,19 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Weather We Were</title>
+  <title>The Weather We Were — An Indie Folk Ballad</title>
+  <meta name="description" content="Listen to The Weather We Were — an indie folk ballad about love, loss, and the weather of memory. An immersive synced lyrics experience.">
+  <meta name="theme-color" content="#f0ebe3">
+
+  <!-- favicon -->
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="icon" href="favicon-heart.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <!-- open graph -->
+  <meta property="og:type" content="music.song">
+  <meta property="og:title" content="The Weather We Were">
+  <meta property="og:description" content="An indie folk ballad about love, loss, and the weather of memory. Synced lyrics experience.">
+  <meta property="og:image" content="og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="1200">
+
+  <!-- twitter card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Weather We Were">
+  <meta name="twitter:description" content="An indie folk ballad about love, loss, and the weather of memory.">
+  <meta name="twitter:image" content="og-image.jpg">
+
+  <!-- structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MusicRecording",
+    "name": "The Weather We Were",
+    "genre": "Indie Folk",
+    "description": "An indie folk ballad about love, loss, and the weather of memory",
+    "duration": "PT4M10S"
+  }
+  </script>
+
+  <!-- preload critical assets -->
+  <link rel="preload" href="cover-680.jpg" as="image">
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Sorts+Mill+Goudy:ital@0;1&family=Lato:ital,wght@0,300;0,400;1,300&display=swap');
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --warm: #121212;
-      --ink: #e8e4de;
-      --muted: #8a8480;
-      --accent: #c4956a;
-      --storm: #7fa8c9;
-      --player-h: 72px;
+      --paper: #f0ebe3;
+      --paper-deep: #e6dfd4;
+      --ink: #2c2622;
+      --ink-light: #4a433d;
+      --muted: #a09588;
+      --rose: #b5706e;
+      --rose-light: #c9918f;
+      --blue: #6a8a9e;
+      --blue-deep: #4e6f84;
+      --gold: #b39660;
+      --gold-light: #c9ae7e;
     }
 
     html, body {
@@ -24,93 +66,258 @@
     }
 
     body {
-      background: var(--warm);
+      background: var(--paper);
       color: var(--ink);
-      font-family: 'Inter', sans-serif;
-      font-weight: 300;
+      font-family: 'Sorts Mill Goudy', 'Georgia', serif;
+      font-weight: 400;
       line-height: 1.7;
       display: flex;
       flex-direction: column;
     }
 
-    /* ---- background texture (covers full page) ---- */
-    body::before {
-      content: '';
+    /* ---- ambient canvas ---- */
+    #ambientCanvas {
       position: fixed;
       inset: 0;
-      background:
-        radial-gradient(ellipse at 30% 20%, rgba(196,149,106,.08) 0%, transparent 60%),
-        radial-gradient(ellipse at 70% 80%, rgba(127,168,201,.06) 0%, transparent 60%);
-      pointer-events: none;
       z-index: 0;
+      pointer-events: none;
     }
 
+    /* ---- paper texture ---- */
     body::after {
       content: '';
       position: fixed;
       inset: 0;
-      opacity: .03;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: .04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
       background-size: 200px;
       pointer-events: none;
-      z-index: 0;
-    }
-
-    /* ---- header ---- */
-    .header {
-      text-align: center;
-      padding: 2rem 2rem 1rem;
-      flex-shrink: 0;
-      position: relative;
       z-index: 1;
     }
 
+    /* ======== INTRO PANEL ======== */
+    .intro-panel {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      /* return transition: slide back in, delayed so lyrics fade out first */
+      transition: transform .8s cubic-bezier(.4,0,.2,1) .5s, opacity .8s ease .5s;
+    }
+
+    body.playing .intro-panel {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+      /* exit transition: slide out immediately */
+      transition: transform .8s cubic-bezier(.4,0,.2,1), opacity .8s ease;
+    }
+
+    .intro-title {
+      font-family: 'Sorts Mill Goudy', serif;
+      font-weight: 400;
+      font-size: clamp(2.4rem, 6vw, 3.8rem);
+      line-height: 1.1;
+      letter-spacing: .02em;
+      color: var(--ink);
+      text-align: center;
+    }
+
+    .intro-title em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--rose);
+    }
+
+    .intro-panel .subtitle {
+      font-size: 1.05rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .intro-panel .album-cover {
+      width: clamp(200px, 40vw, 320px);
+      height: clamp(200px, 40vw, 320px);
+    }
+
+    .intro-panel .idle-text {
+      font-family: 'Lato', sans-serif;
+      font-weight: 300;
+      font-size: .5rem;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 1.2rem;
+      animation: breathe 3s ease-in-out infinite;
+    }
+
+    /* ======== SHARED: Album Cover ======== */
+    .album-cover {
+      position: relative;
+      width: clamp(180px, 36vw, 280px);
+      height: clamp(180px, 36vw, 280px);
+      border-radius: 6px;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow:
+        0 4px 30px rgba(44,38,34,.15),
+        0 0 0 1px rgba(44,38,34,.06);
+      transition: transform .3s ease, box-shadow .3s ease;
+    }
+
+    .album-cover:hover {
+      transform: scale(1.02);
+      box-shadow:
+        0 8px 40px rgba(44,38,34,.2),
+        0 0 0 1px rgba(44,38,34,.08);
+    }
+
+    .album-cover:active {
+      transform: scale(.98);
+    }
+
+    .album-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .album-cover .cover-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(44,38,34,.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .3s ease;
+    }
+
+    .album-cover:hover .cover-overlay {
+      background: rgba(44,38,34,.3);
+    }
+
+    .album-cover .play-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,.7);
+      background: rgba(255,255,255,.1);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .2s, background .2s, border-color .2s;
+    }
+
+    .album-cover:hover .play-circle {
+      transform: scale(1.06);
+      background: rgba(255,255,255,.18);
+      border-color: #fff;
+    }
+
+    .album-cover .play-circle svg {
+      width: 20px;
+      height: 20px;
+      fill: #fff;
+      margin-left: 2px;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,.2));
+    }
+
+    @keyframes breathe {
+      0%, 100% { opacity: .25; }
+      50% { opacity: .6; }
+    }
+
+    /* ======== HEADER (lyrics view) ======== */
+    .header {
+      text-align: center;
+      padding: 2rem 2rem .6rem;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 2;
+      opacity: 0;
+      transform: translateY(-20px);
+      /* hide transition: no delay */
+      transition: opacity .5s ease, transform .5s ease;
+    }
+
+    body.playing .header {
+      opacity: 1;
+      transform: translateY(0);
+      /* show transition: delayed */
+      transition: opacity .6s ease .3s, transform .6s ease .3s;
+    }
+
     .genre {
-      font-size: .65rem;
-      letter-spacing: .2em;
+      font-family: 'Lato', sans-serif;
+      font-weight: 300;
+      font-size: .5rem;
+      letter-spacing: .35em;
       text-transform: uppercase;
       color: var(--muted);
       margin-bottom: .6rem;
     }
 
     h1 {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Sorts Mill Goudy', serif;
       font-weight: 400;
-      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-size: clamp(2rem, 5.5vw, 3.2rem);
       line-height: 1.1;
-      margin-bottom: .25rem;
+      letter-spacing: .02em;
+      color: var(--ink);
     }
 
     h1 em {
       font-style: italic;
-      color: var(--storm);
+      font-weight: 400;
+      color: var(--rose);
     }
 
     .subtitle {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Sorts Mill Goudy', serif;
       font-style: italic;
+      font-weight: 400;
       color: var(--muted);
-      font-size: .9rem;
+      font-size: .95rem;
+      margin-top: .2rem;
+      letter-spacing: .03em;
     }
 
-    /* ---- lyrics pane ---- */
+    /* ======== LYRICS PANE ======== */
     .lyrics-pane {
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
       position: relative;
-      z-index: 1;
+      z-index: 2;
       -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 91%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 91%, transparent 100%);
+      opacity: 0;
+      transform: translateY(30px);
+      /* hide transition: no delay */
+      transition: opacity .6s ease, transform .6s ease;
+    }
 
-      /* fade edges */
-      mask-image: linear-gradient(to bottom, transparent 0%, black 4%, black 92%, transparent 100%);
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 4%, black 92%, transparent 100%);
+    .lyrics-pane::-webkit-scrollbar { display: none; }
+
+    body.playing .lyrics-pane {
+      opacity: 1;
+      transform: translateY(0);
+      /* show transition: delayed */
+      transition: opacity .7s ease .4s, transform .7s ease .4s;
     }
 
     .lyrics {
-      max-width: 620px;
+      max-width: 760px;
       margin: 0 auto;
-      padding: 2rem 2rem 3rem;
+      padding: 2rem 2.5rem 6rem;
       text-align: center;
     }
 
@@ -119,138 +326,172 @@
     }
 
     .lyrics .label {
-      font-size: .6rem;
-      letter-spacing: .2em;
+      font-family: 'Lato', sans-serif;
+      font-weight: 300;
+      font-size: .45rem;
+      letter-spacing: .35em;
       text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: .5rem;
-      transition: opacity .4s ease;
+      color: var(--gold);
+      margin-bottom: .7rem;
+      transition: opacity .5s ease;
     }
 
+    /* ---- lyric lines ---- */
     .lyrics .lyric-line {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(1.1rem, 2.2vw, 1.4rem);
-      line-height: 1.9;
+      font-family: 'Sorts Mill Goudy', serif;
+      font-weight: 400;
+      font-size: clamp(1.3rem, 3vw, 1.85rem);
+      line-height: 2;
       color: var(--ink);
       cursor: pointer;
-      transition: opacity .4s ease, transform .3s ease, color .4s ease;
-      padding: 1px 0;
-      letter-spacing: .01em;
+      transition: opacity .5s ease, transform .4s ease, color .5s ease, letter-spacing .4s ease, background .3s ease;
+      padding: 1px 8px;
+      letter-spacing: .02em;
+      position: relative;
+      border-radius: 4px;
+    }
+
+    /* hover underline (draws from center) */
+    .lyrics .lyric-line::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 1px;
+      background: var(--rose-light);
+      transition: width .3s ease;
+      opacity: .6;
+    }
+
+    .lyrics .lyric-line:hover::after {
+      width: 60%;
     }
 
     .lyrics .lyric-line:hover {
-      color: var(--accent);
+      color: var(--rose);
     }
 
-    .lyrics .bridge .lyric-line,
-    .lyrics .final .lyric-line {
-      color: var(--storm);
+    /* click pulse */
+    .lyrics .lyric-line.lyric-click {
+      animation: clickPulse .25s ease;
     }
 
-    .lyrics .bridge .lyric-line:hover,
-    .lyrics .final .lyric-line:hover {
-      color: var(--accent);
-    }
-
-    .lyrics .outro .lyric-line {
-      font-style: italic;
-      color: var(--muted);
-    }
-
-    .lyrics .outro .lyric-line:hover {
-      color: var(--accent);
+    @keyframes clickPulse {
+      50% { transform: scale(1.07); }
     }
 
     .divider {
-      width: 30px;
-      height: 1px;
-      background: var(--accent);
-      margin: 2rem auto;
-      opacity: .35;
+      width: 40px;
+      height: 0;
+      border-top: 1px solid var(--gold-light);
+      margin: 2.2rem auto;
+      opacity: .3;
+      transition: opacity .5s ease;
     }
 
-    /* ---- synced lyrics mode ---- */
+    /* ======== SYNCED LYRICS MODE ======== */
     body.synced .lyrics .lyric-line {
-      opacity: .18;
-      transform: translateY(0);
+      opacity: .1;
+      transform: translateY(0) scale(1);
     }
 
     body.synced .lyrics .lyric-line.lyric-near-2 {
-      opacity: .28;
+      opacity: .18;
     }
 
     body.synced .lyrics .lyric-line.lyric-near-1 {
-      opacity: .48;
+      opacity: .35;
     }
 
     body.synced .lyrics .lyric-line.lyric-active {
       opacity: 1;
       transform: scale(1.04);
+      color: var(--ink);
+      background: linear-gradient(90deg, transparent 5%, rgba(181,112,110,.05) 30%, rgba(179,150,96,.05) 70%, transparent 95%);
     }
 
-    body.synced .lyrics .label {
-      opacity: .25;
+    body.synced .lyrics .lyric-line:hover {
+      opacity: .4;
     }
 
-    body.synced .lyrics .label.label-active {
+    body.synced .lyrics .lyric-line.lyric-active:hover {
       opacity: 1;
     }
 
+    body.synced .lyrics .label {
+      opacity: .12;
+    }
+
+    body.synced .lyrics .label.label-active {
+      opacity: .7;
+    }
+
     body.synced .lyrics .divider {
-      opacity: .15;
+      opacity: .08;
     }
 
-    /* ---- idle state: prompt to play ---- */
-    .idle-prompt {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2;
-      pointer-events: none;
-      transition: opacity .6s ease;
-    }
-
-    .idle-prompt span {
-      font-size: .7rem;
-      letter-spacing: .15em;
-      text-transform: uppercase;
-      color: var(--muted);
-      animation: pulse 2.5s ease-in-out infinite;
-    }
-
-    body.playing .idle-prompt {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: .4; }
-      50% { opacity: .8; }
-    }
-
-    /* ---- player bar ---- */
+    /* ======== PLAYER BAR (floating pill) ======== */
     .player-bar {
-      flex-shrink: 0;
-      height: var(--player-h);
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      opacity: 0;
+      z-index: 10;
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 0 1.5rem;
-      position: relative;
-      z-index: 1;
-      border-top: 1px solid rgba(255,255,255,.06);
-      background: rgba(18,18,18,.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      gap: 8px;
+      padding: 8px 14px 8px 8px;
+      border-radius: 999px;
+      background: rgba(240,235,227,.82);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border: 1px solid rgba(44,38,34,.06);
+      box-shadow:
+        0 4px 24px rgba(44,38,34,.07),
+        0 0 0 1px rgba(44,38,34,.03),
+        inset 0 1px 0 rgba(255,255,255,.4);
+      pointer-events: none;
+      width: clamp(320px, 94vw, 580px);
+      /* hide transition: no delay */
+      transition: transform .5s cubic-bezier(.4,0,.2,1), opacity .5s ease, box-shadow .3s ease, background .3s ease;
     }
 
-    .player-bar .ctrl-btn {
+    body.playing .player-bar {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+      /* show transition: delayed */
+      transition: transform .6s cubic-bezier(.4,0,.2,1) .5s, opacity .6s ease .5s, box-shadow .3s ease, background .3s ease;
+    }
+
+    .player-bar:hover {
+      background: rgba(240,235,227,.92);
+      box-shadow:
+        0 6px 32px rgba(44,38,34,.1),
+        0 0 0 1px rgba(44,38,34,.05),
+        inset 0 1px 0 rgba(255,255,255,.5);
+    }
+
+    /* thumbnail */
+    .bar-thumb {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      border: 1.5px solid var(--ink);
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,.5);
+      box-shadow: 0 1px 4px rgba(44,38,34,.1);
+    }
+
+    /* control buttons */
+    .player-bar .ctrl-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: none;
       background: transparent;
       cursor: pointer;
       display: flex;
@@ -261,11 +502,10 @@
     }
 
     .player-bar .ctrl-btn:hover {
-      background: var(--ink);
+      background: rgba(44,38,34,.08);
     }
 
-    .player-bar .ctrl-btn:hover svg { fill: var(--warm); }
-    .player-bar .ctrl-btn:active { transform: scale(.93); }
+    .player-bar .ctrl-btn:active { transform: scale(.9); }
 
     .player-bar .ctrl-btn svg {
       width: 14px;
@@ -274,35 +514,106 @@
       transition: fill .2s;
     }
 
-    .player-bar .ctrl-btn.replay-btn {
-      border-color: var(--muted);
+    /* play button: hero style */
+    .player-bar .ctrl-btn.play-btn {
+      width: 38px;
+      height: 38px;
+      background: var(--ink);
     }
 
-    .player-bar .ctrl-btn.replay-btn svg {
-      fill: var(--muted);
+    .player-bar .ctrl-btn.play-btn svg {
+      fill: var(--paper);
       width: 15px;
       height: 15px;
     }
 
-    .player-bar .ctrl-btn.replay-btn:hover {
-      border-color: var(--ink);
-      background: var(--ink);
+    .player-bar .ctrl-btn.play-btn:hover {
+      background: var(--rose);
+    }
+
+    .player-bar .ctrl-btn.replay-btn svg {
+      fill: var(--muted);
     }
 
     .player-bar .ctrl-btn.replay-btn:hover svg {
-      fill: var(--warm);
+      fill: var(--ink);
     }
 
+    /* volume group */
+    .volume-group {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .volume-group .ctrl-btn svg {
+      fill: var(--muted);
+    }
+
+    .volume-group .ctrl-btn:hover svg {
+      fill: var(--ink);
+    }
+
+    .volume-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 48px;
+      height: 3px;
+      border-radius: 3px;
+      background: rgba(44,38,34,.1);
+      outline: none;
+      cursor: pointer;
+      transition: height .15s;
+    }
+
+    .volume-slider:hover {
+      height: 5px;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--muted);
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .volume-slider:hover::-webkit-slider-thumb {
+      background: var(--ink);
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--muted);
+      border: none;
+      cursor: pointer;
+    }
+
+    .volume-slider::-moz-range-track {
+      height: 3px;
+      border-radius: 3px;
+      background: rgba(44,38,34,.1);
+    }
+
+    /* progress group */
     .progress-group {
       flex: 1;
       display: flex;
       align-items: center;
-      gap: .7rem;
+      gap: .5rem;
       min-width: 0;
     }
 
     .progress-group .time {
-      font-size: .65rem;
+      font-family: 'Lato', sans-serif;
+      font-weight: 300;
+      font-size: .6rem;
       color: var(--muted);
       font-variant-numeric: tabular-nums;
       flex-shrink: 0;
@@ -316,25 +627,48 @@
     .progress-wrap {
       flex: 1;
       height: 3px;
-      background: rgba(255,255,255,.12);
-      border-radius: 2px;
+      background: rgba(44,38,34,.08);
+      border-radius: 3px;
       cursor: pointer;
       position: relative;
+      transition: height .15s;
+    }
+
+    .progress-wrap:hover {
+      height: 5px;
     }
 
     .progress-bar {
       height: 100%;
       width: 0%;
-      background: var(--ink);
-      border-radius: 2px;
+      background: var(--rose);
+      border-radius: 3px;
       transition: width .1s linear;
+      position: relative;
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: 50%;
+      transform: translateY(-50%) scale(0);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--rose);
+      transition: transform .15s;
+    }
+
+    .progress-wrap:hover .progress-bar::after {
+      transform: translateY(-50%) scale(1);
     }
 
     /* ---- reveal animation ---- */
     .reveal {
       opacity: 0;
-      transform: translateY(14px);
-      transition: opacity .6s ease, transform .6s ease;
+      transform: translateY(10px);
+      transition: opacity .7s ease, transform .7s ease;
     }
 
     .reveal.visible {
@@ -342,72 +676,230 @@
       transform: translateY(0);
     }
 
-    /* ---- end screen ---- */
-    .end-screen {
-      position: absolute;
+    /* ---- password gate ---- */
+    .gate {
+      position: fixed;
       inset: 0;
+      z-index: 100;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 3;
+      background: var(--paper);
+      transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.4,0,.2,1);
+    }
+
+    .gate.unlocked {
       opacity: 0;
+      transform: scale(1.03);
       pointer-events: none;
-      transition: opacity .8s ease;
     }
 
-    .end-screen.visible {
-      opacity: 1;
-      pointer-events: auto;
+    .gate.unlocked .gate-input {
+      color: var(--rose);
+      border-color: transparent;
     }
 
-    .end-screen .end-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.3rem;
-      color: var(--muted);
+    .gate-mark {
+      width: 40px;
+      height: 0;
+      border-top: 1px solid var(--gold-light);
+      margin-bottom: 2rem;
+      opacity: .4;
+    }
+
+    .gate-input {
+      font-family: 'Sorts Mill Goudy', serif;
       font-style: italic;
-      margin-bottom: 1.5rem;
-    }
-
-    .end-screen .replay-big {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      border: 1.5px solid var(--ink);
+      font-size: 1.4rem;
+      text-align: center;
       background: transparent;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background .25s, transform .15s;
+      border: none;
+      border-bottom: 1px solid rgba(44,38,34,.15);
+      color: var(--ink);
+      outline: none;
+      padding: .5rem 1rem;
+      width: 200px;
+      letter-spacing: .08em;
+      caret-color: var(--rose);
+      transition: border-color .3s ease, color .4s ease;
     }
 
-    .end-screen .replay-big:hover {
-      background: var(--ink);
+    .gate-input::placeholder {
+      color: var(--muted);
+      opacity: .4;
     }
 
-    .end-screen .replay-big:hover svg { fill: var(--warm); }
-    .end-screen .replay-big:active { transform: scale(.93); }
-
-    .end-screen .replay-big svg {
-      width: 20px;
-      height: 20px;
-      fill: var(--ink);
-      transition: fill .25s;
+    .gate-input:focus {
+      border-bottom-color: var(--rose-light);
     }
 
-    .end-screen .replay-label {
-      margin-top: .8rem;
-      font-size: .65rem;
-      letter-spacing: .15em;
+    .gate-hint {
+      font-family: 'Lato', sans-serif;
+      font-weight: 300;
+      font-size: .45rem;
+      letter-spacing: .3em;
       text-transform: uppercase;
       color: var(--muted);
+      margin-top: 1.2rem;
+    }
+
+    .gate-wrong {
+      animation: shake .4s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    /* ---- love note ---- */
+    .love-note {
+      text-align: center;
+      opacity: 0;
+      transition: opacity 2.5s ease;
+      padding: 3rem 0 2rem;
+    }
+
+    .love-note.visible {
+      opacity: 1;
+    }
+
+    .love-note .note-text {
+      font-family: 'Sorts Mill Goudy', serif;
+      font-style: italic;
+      font-size: 1.2rem;
+      color: var(--rose);
+      letter-spacing: .03em;
+    }
+
+    .love-note .note-author {
+      font-family: 'Sorts Mill Goudy', serif;
+      font-style: italic;
+      font-size: .9rem;
+      color: var(--muted);
+      margin-top: .6rem;
+      letter-spacing: .05em;
+    }
+
+    /* ---- responsive ---- */
+
+    /* large screens: more immersive */
+    @media (min-width: 1200px) {
+      .lyrics .lyric-line {
+        font-size: 2rem;
+        line-height: 2.2;
+      }
+      .intro-title {
+        font-size: 4.2rem;
+      }
+      .intro-panel .album-cover {
+        width: 340px;
+        height: 340px;
+      }
+      .intro-panel .subtitle {
+        font-size: 1.15rem;
+      }
+    }
+
+    /* tablet */
+    @media (max-width: 768px) {
+      .header {
+        padding: 1.5rem 1.5rem .5rem;
+      }
+      .lyrics {
+        padding: 1.5rem 1.5rem 6rem;
+      }
+      .intro-panel .album-cover {
+        width: clamp(180px, 50vw, 280px);
+        height: clamp(180px, 50vw, 280px);
+      }
+      .intro-panel .subtitle {
+        margin-bottom: 2rem;
+      }
+    }
+
+    /* mobile */
+    @media (max-width: 480px) {
+      .volume-group { display: none; }
+      .header {
+        padding: 1.2rem 1rem .4rem;
+      }
+      h1 {
+        font-size: clamp(1.6rem, 7vw, 2.2rem);
+      }
+      .intro-title {
+        font-size: clamp(2rem, 8vw, 2.8rem);
+      }
+      .intro-panel .subtitle {
+        margin-bottom: 1.5rem;
+        font-size: .9rem;
+      }
+      .lyrics {
+        padding: 1rem 1rem 5rem;
+      }
+      .lyrics .lyric-line {
+        font-size: clamp(1.1rem, 4.5vw, 1.5rem);
+        line-height: 1.9;
+      }
+      .player-bar {
+        bottom: 1rem;
+        padding: 6px 10px 6px 6px;
+        gap: 6px;
+      }
+      .bar-thumb {
+        width: 34px;
+        height: 34px;
+      }
+      .player-bar .ctrl-btn.play-btn {
+        width: 34px;
+        height: 34px;
+      }
+    }
+
+    /* very small */
+    @media (max-width: 380px) {
+      .progress-group .time { display: none; }
+      .intro-title {
+        font-size: clamp(1.8rem, 9vw, 2.4rem);
+      }
     }
   </style>
 </head>
 <body>
 
-<!-- header -->
+<!-- password gate -->
+<div class="gate" id="gate">
+  <div class="gate-mark"></div>
+  <input type="text" class="gate-input" id="gateInput" autocomplete="off" autofocus spellcheck="false" placeholder="&bull;&bull;&bull;&bull;&bull;">
+  <p class="gate-hint">enter to continue</p>
+</div>
+
+<audio id="audioEl" preload="metadata">
+  <source src="song.ogg" type="audio/ogg; codecs=opus">
+  <source src="song.mp3" type="audio/mpeg">
+</audio>
+
+<canvas id="ambientCanvas"></canvas>
+
+<!-- intro panel -->
+<div class="intro-panel" id="introPanel">
+  <p class="genre">indie folk &middot; ballad</p>
+  <div class="intro-title">The Weather <em>We Were</em></div>
+  <p class="subtitle">Some loves don&rsquo;t end, they rearrange</p>
+  <div class="album-cover" id="playHero" role="button" aria-label="Play" tabindex="0">
+    <img src="cover-680.jpg" alt="The Weather We Were">
+    <div class="cover-overlay">
+      <div class="play-circle">
+        <svg viewBox="0 0 24 24"><polygon points="7,3 21,12 7,21"/></svg>
+      </div>
+    </div>
+  </div>
+  <span class="idle-text">listen</span>
+</div>
+
+<!-- header (lyrics view) -->
 <header class="header">
   <p class="genre">indie folk &middot; ballad</p>
   <h1>The Weather <em>We Were</em></h1>
@@ -416,152 +908,148 @@
 
 <!-- lyrics pane -->
 <div class="lyrics-pane" id="lyricsPane">
-  <div class="idle-prompt" id="idlePrompt"><span>press play</span></div>
-
-  <div class="end-screen" id="endScreen">
-    <div class="end-title">The Weather We Were</div>
-    <button class="replay-big" id="replayBig" aria-label="Replay">
-      <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-    </button>
-    <div class="replay-label">replay</div>
-  </div>
-
   <main class="lyrics" id="lyricsMain">
 
-    <section class="reveal">
-      <div class="label">Verse 1</div>
-      <p class="lyric-line" data-time="18.3">You were neon in a darkened room</p>
-      <p class="lyric-line" data-time="22.3">Laughing like nothing could touch you</p>
-      <p class="lyric-line" data-time="27.3">Every eye turned like they knew your name</p>
-      <p class="lyric-line" data-time="30.7">But I was the one who stayed</p>
+    <section class="reveal" data-section="verse">
+      <div class="label">Verse I</div>
+      <p class="lyric-line" data-time="18.1">You were neon in a darkened room</p>
+      <p class="lyric-line" data-time="23.3">Laughing like nothing could touch you</p>
+      <p class="lyric-line" data-time="26.4">Every eye turned like they knew your name</p>
+      <p class="lyric-line" data-time="31.2">But I was the one who stayed</p>
     </section>
 
-    <section class="reveal">
-      <p class="lyric-line" data-time="35.4">You came home tasting like gin and smoke</p>
-      <p class="lyric-line" data-time="39.6">City lights in your tangled coat</p>
+    <section class="reveal" data-section="verse">
+      <p class="lyric-line" data-time="35.1">You came home tasting like gin and smoke</p>
+      <p class="lyric-line" data-time="40.4">City lights in your tangled coat</p>
       <p class="lyric-line" data-time="44.3">I tried to love you steady and slow</p>
-      <p class="lyric-line" data-time="48.0">But you burned like summer on my throat</p>
+      <p class="lyric-line" data-time="48.5">But you burned like summer on my throat</p>
     </section>
 
     <div class="divider"></div>
 
-    <section class="reveal">
+    <section class="reveal" data-section="prechorus">
       <div class="label">Pre-Chorus</div>
-      <p class="lyric-line" data-time="53.4">You said you were done with the midnight spin</p>
-      <p class="lyric-line" data-time="57.8">Done with drowning just to feel something</p>
-      <p class="lyric-line" data-time="62.1">I wanted to believe you then</p>
-      <p class="lyric-line" data-time="65.6">God, I wanted to believe</p>
+      <p class="lyric-line" data-time="53.6">You said you were done with the midnight spin</p>
+      <p class="lyric-line" data-time="58.4">Done with drowning just to feel something</p>
+      <p class="lyric-line" data-time="62.4">I wanted to believe you then</p>
+      <p class="lyric-line" data-time="66.5">God, I wanted to believe</p>
     </section>
 
     <div class="divider"></div>
 
-    <section class="reveal">
+    <section class="reveal" data-section="chorus">
       <div class="label">Chorus</div>
-      <p class="lyric-line" data-time="71.5">We were fire in a little house</p>
-      <p class="lyric-line" data-time="74.6">Brooklyn walls couldn&rsquo;t hold us down</p>
-      <p class="lyric-line" data-time="77.7">You were storm and I was ground</p>
-      <p class="lyric-line" data-time="80.9">Trying to keep you safe</p>
+      <p class="lyric-line" data-time="71.3">We were fire in a little house</p>
+      <p class="lyric-line" data-time="74.5">Brooklyn walls couldn&rsquo;t hold us down</p>
+      <p class="lyric-line" data-time="76.6">You were storm and I was ground</p>
+      <p class="lyric-line" data-time="78.7">Trying to keep you safe</p>
     </section>
 
-    <section class="reveal">
-      <p class="lyric-line" data-time="84.0">You were wild but you were mine</p>
-      <p class="lyric-line" data-time="87.0">And I was yours in the quiet times</p>
-      <p class="lyric-line" data-time="90.0">If love&rsquo;s a line we walk half-blind</p>
-      <p class="lyric-line" data-time="93.0">We were brave, weren&rsquo;t we?</p>
-    </section>
-
-    <div class="divider"></div>
-
-    <section class="reveal">
-      <div class="label">Verse 2</div>
-      <p class="lyric-line" data-time="97.5">Bella sleeping by your side</p>
-      <p class="lyric-line" data-time="100.7">Norm keeping watch like he always tried</p>
-      <p class="lyric-line" data-time="105.0">Dogs don&rsquo;t ask where you&rsquo;ve been</p>
-      <p class="lyric-line" data-time="109.2">They just love you when you walk back in</p>
-    </section>
-
-    <section class="reveal">
-      <p class="lyric-line" data-time="113.5">Suitcases leaning by the stairs</p>
-      <p class="lyric-line" data-time="118.7">Maps and miles and borrowed air</p>
-      <p class="lyric-line" data-time="122.7">Louisiana heat, Atlantic cold</p>
-      <p class="lyric-line" data-time="127.6">We kept running but we never slowed</p>
+    <section class="reveal" data-section="chorus">
+      <p class="lyric-line" data-time="80.9">You were wild but you were mine</p>
+      <p class="lyric-line" data-time="83.0">And I was yours in the quiet times</p>
+      <p class="lyric-line" data-time="85.3">If love&rsquo;s a line we walk half-blind</p>
+      <p class="lyric-line" data-time="88.2">We were brave, weren&rsquo;t we?</p>
     </section>
 
     <div class="divider"></div>
 
-    <section class="reveal">
+    <section class="reveal" data-section="verse">
+      <div class="label">Verse II</div>
+      <p class="lyric-line" data-time="98.1">Bella sleeping by your side</p>
+      <p class="lyric-line" data-time="101.1">Norm keeping watch like he always tried</p>
+      <p class="lyric-line" data-time="106.6">Dogs don&rsquo;t ask where you&rsquo;ve been</p>
+      <p class="lyric-line" data-time="110.1">They just love you when you walk back in</p>
+    </section>
+
+    <section class="reveal" data-section="verse">
+      <p class="lyric-line" data-time="114.8">Suitcases leaning by the stairs</p>
+      <p class="lyric-line" data-time="118.4">Maps and miles and borrowed air</p>
+      <p class="lyric-line" data-time="123.4">Louisiana heat, Atlantic cold</p>
+      <p class="lyric-line" data-time="127.3">We kept running but we never slowed</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="reveal" data-section="prechorus">
       <div class="label">Pre-Chorus</div>
-      <p class="lyric-line" data-time="132.8">You&rsquo;d raise your voice like thunder breaking</p>
-      <p class="lyric-line" data-time="141.6">Then hold me like the sky was shaking</p>
+      <p class="lyric-line" data-time="133.1">You&rsquo;d raise your voice like thunder breaking</p>
+      <p class="lyric-line" data-time="138.4">Then hold me like the sky was shaking</p>
     </section>
 
     <div class="divider"></div>
 
-    <section class="reveal">
+    <section class="reveal" data-section="chorus">
       <div class="label">Chorus</div>
-      <p class="lyric-line" data-time="148.0">We were fire in a little house</p>
-      <p class="lyric-line" data-time="151.0">Burning bright then burning out</p>
-      <p class="lyric-line" data-time="154.0">You were storm and I was doubt</p>
-      <p class="lyric-line" data-time="157.5">Trying to hold the line</p>
+      <p class="lyric-line" data-time="148.8">We were fire in a little house</p>
+      <p class="lyric-line" data-time="150.8">Burning bright then burning out</p>
+      <p class="lyric-line" data-time="153.0">You were storm and I was doubt</p>
+      <p class="lyric-line" data-time="155.0">Trying to hold the line</p>
     </section>
 
-    <section class="reveal">
-      <p class="lyric-line" data-time="160.9">You were hurt and you were hope</p>
-      <p class="lyric-line" data-time="164.2">And I tied my heart around your rope</p>
-      <p class="lyric-line" data-time="167.5">If love&rsquo;s a tide that pulls and goes</p>
-      <p class="lyric-line" data-time="170.7">We were deep, weren&rsquo;t we?</p>
+    <section class="reveal" data-section="chorus">
+      <p class="lyric-line" data-time="157.3">You were hurt and you were hope</p>
+      <p class="lyric-line" data-time="159.4">And I tied my heart around your rope</p>
+      <p class="lyric-line" data-time="161.7">If love&rsquo;s a tide that pulls and goes</p>
+      <p class="lyric-line" data-time="164.5">We were deep, weren&rsquo;t we?</p>
     </section>
 
     <div class="divider"></div>
 
-    <section class="reveal bridge">
+    <section class="reveal bridge" data-section="bridge">
       <div class="label">Bridge</div>
-      <p class="lyric-line" data-time="173.9">Maybe you&rsquo;re sober now</p>
-      <p class="lyric-line" data-time="176.8">Maybe I&rsquo;m older now</p>
-      <p class="lyric-line" data-time="179.7">Maybe we both just needed space</p>
+      <p class="lyric-line" data-time="174.0">Maybe you&rsquo;re sober now</p>
+      <p class="lyric-line" data-time="176.7">Maybe I&rsquo;m older now</p>
+      <p class="lyric-line" data-time="178.9">Maybe we both just needed space</p>
     </section>
 
-    <section class="reveal bridge">
+    <section class="reveal bridge" data-section="bridge">
       <p class="lyric-line" data-time="182.5">Maybe the bar lights fade</p>
-      <p class="lyric-line" data-time="185.8">Maybe the sharp words change</p>
-      <p class="lyric-line" data-time="189.2">Maybe we meet again halfway</p>
+      <p class="lyric-line" data-time="185.7">Maybe the sharp words change</p>
+      <p class="lyric-line" data-time="188.0">Maybe we meet again halfway</p>
     </section>
 
     <div class="divider"></div>
 
-    <section class="reveal final">
+    <section class="reveal final" data-section="final">
       <div class="label">Final Chorus</div>
-      <p class="lyric-line" data-time="196.1">We were weather, you and I</p>
+      <p class="lyric-line" data-time="196.2">We were weather, you and I</p>
       <p class="lyric-line" data-time="199.0">Blue sky turning violent skies</p>
-      <p class="lyric-line" data-time="202.0">Still I see you in my mind</p>
-      <p class="lyric-line" data-time="205.0">Soft and golden</p>
+      <p class="lyric-line" data-time="202.2">Still I see you in my mind</p>
+      <p class="lyric-line" data-time="206.1">Soft and golden</p>
     </section>
 
-    <section class="reveal final">
-      <p class="lyric-line" data-time="209.4">If you knock on my door one night</p>
-      <p class="lyric-line" data-time="212.1">With clear eyes and a steady light</p>
+    <section class="reveal final" data-section="final">
+      <p class="lyric-line" data-time="209.5">If you knock on my door one night</p>
+      <p class="lyric-line" data-time="212.8">With clear eyes and a steady light</p>
       <p class="lyric-line" data-time="214.8">I don&rsquo;t know if I&rsquo;d let you inside</p>
-      <p class="lyric-line" data-time="217.5">But I&rsquo;d want to</p>
+      <p class="lyric-line" data-time="217.8">But I&rsquo;d want to</p>
     </section>
 
     <div class="divider"></div>
 
-    <section class="reveal outro">
+    <section class="reveal outro" data-section="outro">
       <div class="label">Outro</div>
       <p class="lyric-line" data-time="222.0">Some loves don&rsquo;t end, they rearrange</p>
-      <p class="lyric-line" data-time="226.0">Like summer turning into rain</p>
-      <p class="lyric-line" data-time="230.8">And I still taste your name</p>
-      <p class="lyric-line" data-time="236.0">When it storms</p>
+      <p class="lyric-line" data-time="226.1">Like summer turning into rain</p>
+      <p class="lyric-line" data-time="231.1">And I still taste your name</p>
+      <p class="lyric-line" data-time="237.1">When it storms</p>
     </section>
+
+    <div class="love-note" id="loveNote">
+      <p class="note-text">I love you like..</p>
+      <p class="note-author">&mdash; Oddur</p>
+    </div>
 
   </main>
 </div>
 
-<!-- player bar -->
-<div class="player-bar">
-  <button class="ctrl-btn" aria-label="Play" id="playBtn">
-    <svg id="iconPlay" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
-    <svg id="iconPause" viewBox="0 0 24 24" style="display:none"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
+<!-- player bar (floating pill) -->
+<div class="player-bar" id="playerBar">
+  <img class="bar-thumb" src="cover-680.jpg" alt="">
+  <button class="ctrl-btn play-btn" aria-label="Play" id="playBtn">
+    <svg id="iconPlay" viewBox="0 0 24 24"><path d="M8 5.14v13.72c0 .97 1.06 1.58 1.9 1.1l10.2-6.86c.8-.54.8-1.66 0-2.2L9.9 4.04C9.06 3.56 8 4.17 8 5.14z"/></svg>
+    <svg id="iconPause" viewBox="0 0 24 24" style="display:none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
   </button>
   <div class="progress-group">
     <span class="time" id="curTime">0:00</span>
@@ -570,14 +1058,93 @@
     </div>
     <span class="time time-end" id="durTime">0:00</span>
   </div>
+  <div class="volume-group">
+    <button class="ctrl-btn vol-btn" id="volBtn" aria-label="Volume">
+      <svg id="iconVolOn" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8.5v7c1.48-.73 2.5-2.25 2.5-3.5z"/></svg>
+      <svg id="iconVolOff" viewBox="0 0 24 24" style="display:none"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>
+    </button>
+    <input type="range" class="volume-slider" id="volSlider" min="0" max="1" step="0.01" value="1">
+  </div>
   <button class="ctrl-btn replay-btn" aria-label="Replay" id="replayBtn">
     <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
   </button>
 </div>
 
 <script>
-  const audio = new Audio('song.wav');
+  // ======== AMBIENT CANVAS ========
+  const canvas = document.getElementById('ambientCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const orbs = [];
+  for (let i = 0; i < 4; i++) {
+    orbs.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: 180 + Math.random() * 220,
+      vx: (Math.random() - .5) * .1,
+      vy: (Math.random() - .5) * .08,
+      hue: i % 2 === 0 ? 'rose' : 'blue',
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  let moodWarm = .5;
+  let moodTarget = .5;
+  let moodIntensity = .2;
+  let moodIntensityTarget = .2;
+
+  function drawAmbient(t) {
+    ctx.clearRect(0, 0, W, H);
+
+    moodWarm += (moodTarget - moodWarm) * .006;
+    moodIntensity += (moodIntensityTarget - moodIntensity) * .008;
+
+    for (const orb of orbs) {
+      orb.x += orb.vx;
+      orb.y += orb.vy;
+      if (orb.x < -orb.r) orb.x = W + orb.r;
+      if (orb.x > W + orb.r) orb.x = -orb.r;
+      if (orb.y < -orb.r) orb.y = H + orb.r;
+      if (orb.y > H + orb.r) orb.y = -orb.r;
+
+      const pulse = 1 + Math.sin(t * .0006 + orb.phase) * .12;
+      const r = orb.r * pulse;
+
+      let alpha;
+      if (orb.hue === 'rose') {
+        alpha = (.02 + moodWarm * .03) * moodIntensity * 2;
+      } else {
+        alpha = (.02 + (1 - moodWarm) * .03) * moodIntensity * 2;
+      }
+
+      const grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, r);
+      if (orb.hue === 'rose') {
+        grad.addColorStop(0, `rgba(181,112,110,${alpha})`);
+      } else {
+        grad.addColorStop(0, `rgba(106,138,158,${alpha})`);
+      }
+      grad.addColorStop(1, 'rgba(240,235,227,0)');
+
+      ctx.fillStyle = grad;
+      ctx.fillRect(orb.x - r, orb.y - r, r * 2, r * 2);
+    }
+
+    requestAnimationFrame(drawAmbient);
+  }
+  requestAnimationFrame(drawAmbient);
+
+  // ======== AUDIO ========
+  const audio = document.getElementById('audioEl');
   const playBtn = document.getElementById('playBtn');
+  const playHero = document.getElementById('playHero');
   const iconPlay = document.getElementById('iconPlay');
   const iconPause = document.getElementById('iconPause');
   const progressBar = document.getElementById('progressBar');
@@ -585,11 +1152,13 @@
   const curTime = document.getElementById('curTime');
   const durTime = document.getElementById('durTime');
   const replayBtn = document.getElementById('replayBtn');
-  const replayBig = document.getElementById('replayBig');
   const lyricsPane = document.getElementById('lyricsPane');
-  const lyricsMain = document.getElementById('lyricsMain');
-  const idlePrompt = document.getElementById('idlePrompt');
-  const endScreen = document.getElementById('endScreen');
+  const volBtn = document.getElementById('volBtn');
+  const volSlider = document.getElementById('volSlider');
+  const iconVolOn = document.getElementById('iconVolOn');
+  const iconVolOff = document.getElementById('iconVolOff');
+  let savedVol = 1;
+  const loveNote = document.getElementById('loveNote');
 
   function fmt(s) {
     const m = Math.floor(s / 60);
@@ -597,7 +1166,6 @@
     return m + ':' + String(sec).padStart(2, '0');
   }
 
-  // --- audio events ---
   audio.addEventListener('loadedmetadata', () => durTime.textContent = fmt(audio.duration));
 
   audio.addEventListener('timeupdate', () => {
@@ -605,26 +1173,41 @@
     progressBar.style.width = (audio.currentTime / audio.duration * 100) + '%';
     curTime.textContent = fmt(audio.currentTime);
     syncLyrics(audio.currentTime);
+
+    // love note: fade in near the end
+    if (audio.currentTime >= 243 && !loveNote.classList.contains('visible')) {
+      loveNote.classList.add('visible');
+      setTimeout(() => {
+        const noteRect = loveNote.getBoundingClientRect();
+        const paneRect = lyricsPane.getBoundingClientRect();
+        const offset = noteRect.top - paneRect.top - paneRect.height / 2 + noteRect.height / 2;
+        lyricsPane.scrollBy({ top: offset, behavior: 'smooth' });
+      }, 800);
+    }
   });
 
   audio.addEventListener('ended', () => {
     iconPlay.style.display = '';
     iconPause.style.display = 'none';
-    document.body.classList.remove('playing');
-    endScreen.classList.add('visible');
-    // keep synced state but clear active highlight
-    lyricLines.forEach(el => el.classList.remove('lyric-active', 'lyric-near-1', 'lyric-near-2'));
-    document.querySelectorAll('.label').forEach(el => el.classList.remove('label-active'));
-    currentIdx = -1;
+    // hold the love note for a few seconds before resetting
+    setTimeout(() => {
+      document.body.classList.remove('playing', 'synced');
+      loveNote.classList.remove('visible');
+      lyricLines.forEach(el => el.classList.remove('lyric-active', 'lyric-near-1', 'lyric-near-2'));
+      document.querySelectorAll('.label').forEach(el => el.classList.remove('label-active'));
+      currentIdx = -1;
+      syncActive = false;
+      moodTarget = .5;
+      moodIntensityTarget = .2;
+      setTimeout(() => { lyricsPane.scrollTop = 0; }, 900);
+    }, 4000);
   });
 
-  // --- play / pause ---
   function doPlay() {
     audio.play();
     iconPlay.style.display = 'none';
     iconPause.style.display = '';
     document.body.classList.add('playing');
-    endScreen.classList.remove('visible');
     enterSyncMode();
   }
 
@@ -639,33 +1222,70 @@
     else doPause();
   });
 
-  // --- replay ---
+  playHero.addEventListener('click', () => doPlay());
+
   function doReplay() {
     audio.currentTime = 0;
     currentIdx = -1;
+    syncActive = false;
+    loveNote.classList.remove('visible');
     lyricLines.forEach(el => el.classList.remove('lyric-active', 'lyric-near-1', 'lyric-near-2'));
     document.querySelectorAll('.label').forEach(el => el.classList.remove('label-active'));
     lyricsPane.scrollTop = 0;
-    endScreen.classList.remove('visible');
     doPlay();
   }
 
   replayBtn.addEventListener('click', doReplay);
-  replayBig.addEventListener('click', doReplay);
 
-  // --- seek ---
+  // ======== VOLUME ========
+  volSlider.addEventListener('input', () => {
+    audio.volume = volSlider.value;
+    updateVolIcon();
+  });
+
+  volBtn.addEventListener('click', () => {
+    if (audio.volume > 0) {
+      savedVol = audio.volume;
+      audio.volume = 0;
+      volSlider.value = 0;
+    } else {
+      audio.volume = savedVol;
+      volSlider.value = savedVol;
+    }
+    updateVolIcon();
+  });
+
+  function updateVolIcon() {
+    if (audio.volume === 0) {
+      iconVolOn.style.display = 'none';
+      iconVolOff.style.display = '';
+    } else {
+      iconVolOn.style.display = '';
+      iconVolOff.style.display = 'none';
+    }
+  }
+
   progressWrap.addEventListener('click', e => {
-    const ratio = e.offsetX / progressWrap.offsetWidth;
+    const rect = progressWrap.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
     audio.currentTime = ratio * audio.duration;
-    endScreen.classList.remove('visible');
     if (audio.paused) doPlay();
   });
 
-  // --- synced lyrics ---
+  // ======== SYNCED LYRICS ========
   const lyricLines = Array.from(document.querySelectorAll('.lyric-line'));
   const lyricTimes = lyricLines.map(el => parseFloat(el.dataset.time));
   let currentIdx = -1;
   let syncActive = false;
+
+  const sectionMoods = {
+    verse:     { warm: .65, intensity: .3 },
+    prechorus: { warm: .55, intensity: .4 },
+    chorus:    { warm: .4,  intensity: .6 },
+    bridge:    { warm: .3,  intensity: .45 },
+    final:     { warm: .45, intensity: .7 },
+    outro:     { warm: .6,  intensity: .2 }
+  };
 
   function enterSyncMode() {
     if (syncActive) return;
@@ -700,28 +1320,65 @@
     const label = section && section.querySelector('.label');
     if (label) label.classList.add('label-active');
 
-    // scroll within the lyrics pane, not the whole page
+    const sectionType = section && section.dataset.section;
+    if (sectionType && sectionMoods[sectionType]) {
+      moodTarget = sectionMoods[sectionType].warm;
+      moodIntensityTarget = sectionMoods[sectionType].intensity;
+    }
+
     const paneRect = lyricsPane.getBoundingClientRect();
     const lineRect = lyricLines[idx].getBoundingClientRect();
     const offset = lineRect.top - paneRect.top - paneRect.height / 2 + lineRect.height / 2;
     lyricsPane.scrollBy({ top: offset, behavior: 'smooth' });
   }
 
-  // click-to-seek on lyric lines
+  // ======== LYRIC LINE CLICKS ========
   lyricLines.forEach((el, i) => {
     el.addEventListener('click', () => {
+      // click pulse
+      el.classList.remove('lyric-click');
+      void el.offsetWidth;
+      el.classList.add('lyric-click');
+
       audio.currentTime = lyricTimes[i];
-      endScreen.classList.remove('visible');
       if (audio.paused) doPlay();
       else enterSyncMode();
     });
+    el.addEventListener('animationend', () => el.classList.remove('lyric-click'));
   });
 
-  // --- scroll reveal (uses lyrics pane as root) ---
+  // ======== REVEAL OBSERVER ========
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
   }, { root: lyricsPane, threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  // ======== PASSWORD GATE ========
+  const gate = document.getElementById('gate');
+  const gateInput = document.getElementById('gateInput');
+
+  gateInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (gateInput.value.toLowerCase() === 'bloop') {
+        gate.classList.add('unlocked');
+        gate.addEventListener('transitionend', () => gate.remove());
+      } else {
+        gateInput.classList.add('gate-wrong');
+        gateInput.addEventListener('animationend', () => gateInput.classList.remove('gate-wrong'), { once: true });
+        gateInput.value = '';
+      }
+    }
+  });
+
+  // ======== KEYBOARD ========
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (audio.paused) doPlay();
+      else doPause();
+    }
+  });
 </script>
 
 </body>

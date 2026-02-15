@@ -1,0 +1,8 @@
+# Original unoptimized assets
+song.wav
+cover.jpg
+favicon-32.png
+
+# IDE / system
+.DS_Store
+.claude/
