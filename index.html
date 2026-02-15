@@ -122,7 +122,7 @@
       font-weight: 400;
       font-size: clamp(2.4rem, 6vw, 3.8rem);
       line-height: 1.1;
-      letter-spacing: .02em;
+      letter-spacing: -.01em;
       color: var(--ink);
       text-align: center;
     }
@@ -136,6 +136,7 @@
     .intro-panel .subtitle {
       font-size: 1.05rem;
       margin-bottom: 2.5rem;
+      letter-spacing: .06em;
     }
 
     .intro-panel .album-cover {
@@ -268,7 +269,7 @@
       font-weight: 400;
       font-size: clamp(2rem, 5.5vw, 3.2rem);
       line-height: 1.1;
-      letter-spacing: .02em;
+      letter-spacing: -.01em;
       color: var(--ink);
     }
 
@@ -346,7 +347,7 @@
       cursor: pointer;
       transition: opacity .5s ease, transform .4s ease, color .5s ease, letter-spacing .4s ease, background .3s ease;
       padding: 1px 8px;
-      letter-spacing: .02em;
+      letter-spacing: -.005em;
       position: relative;
       border-radius: 4px;
     }
@@ -939,9 +940,9 @@
 
 <!-- intro panel -->
 <div class="intro-panel" id="introPanel">
-  <p class="genre">indie folk &middot; ballad</p>
+  <p class="genre">&loz;&ensp;indie folk &middot; ballad&ensp;&loz;</p>
   <div class="intro-title">The Weather <em>We Were</em></div>
-  <p class="subtitle">Some loves don&rsquo;t end</p>
+  <p class="subtitle">&mdash;&ensp;Some loves don&rsquo;t end&ensp;&mdash;</p>
   <div class="album-cover" id="playHero" role="button" aria-label="Play" tabindex="0">
     <img src="cover-680.jpg" alt="The Weather We Were">
     <div class="cover-overlay">
@@ -955,9 +956,9 @@
 
 <!-- header (lyrics view) -->
 <header class="header">
-  <p class="genre">indie folk &middot; ballad</p>
+  <p class="genre">&loz;&ensp;indie folk &middot; ballad&ensp;&loz;</p>
   <h1>The Weather <em>We Were</em></h1>
-  <p class="subtitle">Some loves don&rsquo;t end</p>
+  <p class="subtitle">&mdash;&ensp;Some loves don&rsquo;t end&ensp;&mdash;</p>
 </header>
 
 <!-- lyrics pane -->
@@ -1222,6 +1223,8 @@
   const iconVolOn = document.getElementById('iconVolOn');
   const iconVolOff = document.getElementById('iconVolOff');
   let savedVol = 1;
+  let userVolume = 1;
+  let fadingOut = false;
   const loveScreen = document.getElementById('loveScreen');
 
   function fmt(s) {
@@ -1242,23 +1245,49 @@
     if (audio.currentTime >= 240 && !loveScreen.classList.contains('visible')) {
       loveScreen.classList.add('visible');
     }
+
+    // volume fade-out: ease out over last 3 seconds
+    if (audio.duration && !fadingOut) {
+      const remaining = audio.duration - audio.currentTime;
+      if (remaining <= 3) {
+        const t = remaining / 3;                 // 1 → 0
+        const eased = t * t * (3 - 2 * t);       // smoothstep
+        audio.volume = eased * userVolume;
+      }
+    }
   });
 
   audio.addEventListener('ended', () => {
     iconPlay.style.display = '';
     iconPause.style.display = 'none';
-    // hold the love note for a few seconds before resetting
+    fadingOut = true;
+
+    // Phase 1: hold love note so it can be read (3s)
     setTimeout(() => {
-      document.body.classList.remove('playing', 'synced');
+      // Phase 2: fade love screen out
       loveScreen.classList.remove('visible');
-      lyricLines.forEach(el => el.classList.remove('lyric-active', 'lyric-near-1', 'lyric-near-2'));
-      document.querySelectorAll('.label').forEach(el => el.classList.remove('label-active'));
-      currentIdx = -1;
-      syncActive = false;
-      moodTarget = .5;
-      moodIntensityTarget = .2;
-      setTimeout(() => { lyricsPane.scrollTop = 0; }, 900);
-    }, 4000);
+
+      // Phase 3: after love fades, return to intro (2.5s)
+      setTimeout(() => {
+        audio.volume = userVolume;
+        fadingOut = false;
+        document.body.classList.remove('playing', 'synced');
+        lyricLines.forEach(el => el.classList.remove('lyric-active', 'lyric-near-1', 'lyric-near-2'));
+        document.querySelectorAll('.label').forEach(el => el.classList.remove('label-active'));
+        currentIdx = -1;
+        syncActive = false;
+        moodTarget = .5;
+        moodIntensityTarget = .2;
+        lyricsPane.scrollTop = 0;
+
+        // Phase 4: after intro settles, bring gate back (1.5s)
+        setTimeout(() => {
+          gateInput.value = '';
+          gate.classList.remove('unlocked');
+          setTimeout(() => gateInput.focus(), 1300);
+        }, 1500);
+      }, 2500);
+    }, 3000);
   });
 
   function doPlay() {
@@ -1283,6 +1312,8 @@
   playHero.addEventListener('click', () => doPlay());
 
   function doReplay() {
+    audio.volume = userVolume;
+    fadingOut = false;
     audio.currentTime = 0;
     currentIdx = -1;
     syncActive = false;
@@ -1298,16 +1329,19 @@
   // ======== VOLUME ========
   volSlider.addEventListener('input', () => {
     audio.volume = volSlider.value;
+    userVolume = parseFloat(volSlider.value);
     updateVolIcon();
   });
 
   volBtn.addEventListener('click', () => {
     if (audio.volume > 0) {
-      savedVol = audio.volume;
+      savedVol = userVolume;
       audio.volume = 0;
+      userVolume = 0;
       volSlider.value = 0;
     } else {
       audio.volume = savedVol;
+      userVolume = savedVol;
       volSlider.value = savedVol;
     }
     updateVolIcon();
@@ -1419,7 +1453,6 @@
     if (e.key === 'Enter') {
       if (gateInput.value.toLowerCase() === 'bloop') {
         gate.classList.add('unlocked');
-        gate.addEventListener('transitionend', () => gate.remove());
       } else {
         gateInput.classList.add('gate-wrong');
         gateInput.addEventListener('animationend', () => gateInput.classList.remove('gate-wrong'), { once: true });
