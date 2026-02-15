@@ -340,7 +340,7 @@
     .lyrics .lyric-line {
       font-family: 'Sorts Mill Goudy', serif;
       font-weight: 400;
-      font-size: clamp(1.3rem, 3vw, 1.85rem);
+      font-size: clamp(1.2rem, 2.6vw, 1.65rem);
       line-height: 2;
       color: var(--ink);
       cursor: pointer;
@@ -766,7 +766,7 @@
       background: rgba(240,235,227,.97);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 3s ease;
+      transition: opacity 2.5s ease;
       padding: 2rem;
     }
 
@@ -775,40 +775,64 @@
       pointer-events: auto;
     }
 
-    .love-screen .love-heart svg {
-      width: 32px;
-      height: 32px;
-      margin-bottom: 2rem;
-      opacity: .9;
+    /* staggered reveal for each child */
+    .love-screen > * {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 2s ease, transform 2s ease;
     }
 
-    .love-screen .love-text {
+    .love-screen.visible > *:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: .5s; }
+    .love-screen.visible > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 2s; }
+    .love-screen.visible > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 4s; }
+    .love-screen.visible > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 7s; }
+
+    .love-screen .love-heart svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .love-screen .love-opener {
       font-family: 'Sorts Mill Goudy', serif;
       font-style: italic;
-      font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
       color: var(--ink);
       text-align: center;
       line-height: 1.6;
       letter-spacing: .02em;
+      margin-top: 1.5rem;
     }
 
-    .love-screen .love-detail {
+    .love-screen .love-body {
       font-family: 'Sorts Mill Goudy', serif;
       font-style: italic;
-      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      font-size: clamp(1.05rem, 2.5vw, 1.35rem);
       color: var(--muted);
       text-align: center;
-      line-height: 1.9;
-      margin-top: 1.8rem;
-      max-width: 420px;
+      line-height: 2;
+      margin-top: 1.5rem;
+      max-width: 400px;
+    }
+
+    .love-screen .love-close {
+      margin-top: 2.5rem;
+      text-align: center;
+    }
+
+    .love-screen .love-main {
+      font-family: 'Sorts Mill Goudy', serif;
+      font-style: italic;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      color: var(--rose);
+      letter-spacing: .02em;
     }
 
     .love-screen .love-author {
       font-family: 'Sorts Mill Goudy', serif;
       font-style: italic;
-      font-size: 1rem;
+      font-size: .95rem;
       color: var(--muted);
-      margin-top: 2.5rem;
+      margin-top: 1rem;
       letter-spacing: .06em;
       opacity: .7;
     }
@@ -818,7 +842,7 @@
     /* large screens: more immersive */
     @media (min-width: 1200px) {
       .lyrics .lyric-line {
-        font-size: 2rem;
+        font-size: 1.8rem;
         line-height: 2.2;
       }
       .intro-title {
@@ -870,7 +894,7 @@
         padding: 1rem 1rem 5rem;
       }
       .lyrics .lyric-line {
-        font-size: clamp(1.1rem, 4.5vw, 1.5rem);
+        font-size: clamp(1.05rem, 4.2vw, 1.4rem);
         line-height: 1.9;
       }
       .player-bar {
@@ -917,7 +941,7 @@
 <div class="intro-panel" id="introPanel">
   <p class="genre">indie folk &middot; ballad</p>
   <div class="intro-title">The Weather <em>We Were</em></div>
-  <p class="subtitle">Some loves don&rsquo;t end, they rearrange</p>
+  <p class="subtitle">Some loves don&rsquo;t end</p>
   <div class="album-cover" id="playHero" role="button" aria-label="Play" tabindex="0">
     <img src="cover-680.jpg" alt="The Weather We Were">
     <div class="cover-overlay">
@@ -933,7 +957,7 @@
 <header class="header">
   <p class="genre">indie folk &middot; ballad</p>
   <h1>The Weather <em>We Were</em></h1>
-  <p class="subtitle">Some loves don&rsquo;t end, they rearrange</p>
+  <p class="subtitle">Some loves don&rsquo;t end</p>
 </header>
 
 <!-- lyrics pane -->
@@ -1060,7 +1084,7 @@
 
     <section class="reveal outro" data-section="outro">
       <div class="label">Outro</div>
-      <p class="lyric-line" data-time="222.0">Some loves don&rsquo;t end, they rearrange</p>
+      <p class="lyric-line" data-time="222.0">Some loves don&rsquo;t end</p>
       <p class="lyric-line" data-time="226.1">Like summer turning into rain</p>
       <p class="lyric-line" data-time="231.1">And I still taste your name</p>
       <p class="lyric-line" data-time="237.1">When it storms</p>
@@ -1074,9 +1098,14 @@
   <div class="love-heart">
     <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ea3323"/></svg>
   </div>
-  <p class="love-text">I love you like..</p>
-  <p class="love-detail">the way some storms never really end,<br>they just become the weather we were.</p>
-  <p class="love-author">&mdash; Oddur</p>
+  <p class="love-opener">I loved you in every weather.</p>
+  <div class="love-body">
+    <p>The wild kind.<br>The quiet kind.<br>The kind that doesn&rsquo;t have a name<br>but fills the whole sky.</p>
+  </div>
+  <div class="love-close">
+    <p class="love-main">I love you so much.</p>
+    <p class="love-author">&mdash; Oddur</p>
+  </div>
 </div>
 
 <!-- player bar (floating pill) -->
@@ -1210,7 +1239,7 @@
     syncLyrics(audio.currentTime);
 
     // love screen: fade in near the end
-    if (audio.currentTime >= 243 && !loveScreen.classList.contains('visible')) {
+    if (audio.currentTime >= 240 && !loveScreen.classList.contains('visible')) {
       loveScreen.classList.add('visible');
     }
   });
