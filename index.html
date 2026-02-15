@@ -1264,29 +1264,22 @@
 
     // Phase 1: hold love note so it can be read (3s)
     setTimeout(() => {
-      // Phase 2: fade love screen out
-      loveScreen.classList.remove('visible');
+      // Phase 2: reset everything behind the love screen (it's z-index 6, covers intro/lyrics)
+      audio.volume = userVolume;
+      fadingOut = false;
+      document.body.classList.remove('playing', 'synced');
+      lyricLines.forEach(el => el.classList.remove('lyric-active', 'lyric-near-1', 'lyric-near-2'));
+      document.querySelectorAll('.label').forEach(el => el.classList.remove('label-active'));
+      currentIdx = -1;
+      syncActive = false;
+      moodTarget = .5;
+      moodIntensityTarget = .2;
+      lyricsPane.scrollTop = 0;
 
-      // Phase 3: after love fades, return to intro (2.5s)
+      // Phase 3: after intro settles behind love screen, dissolve it away
       setTimeout(() => {
-        audio.volume = userVolume;
-        fadingOut = false;
-        document.body.classList.remove('playing', 'synced');
-        lyricLines.forEach(el => el.classList.remove('lyric-active', 'lyric-near-1', 'lyric-near-2'));
-        document.querySelectorAll('.label').forEach(el => el.classList.remove('label-active'));
-        currentIdx = -1;
-        syncActive = false;
-        moodTarget = .5;
-        moodIntensityTarget = .2;
-        lyricsPane.scrollTop = 0;
-
-        // Phase 4: after intro settles, bring gate back (1.5s)
-        setTimeout(() => {
-          gateInput.value = '';
-          gate.classList.remove('unlocked');
-          setTimeout(() => gateInput.focus(), 1300);
-        }, 1500);
-      }, 2500);
+        loveScreen.classList.remove('visible');
+      }, 1500);
     }, 3000);
   });
 
@@ -1448,11 +1441,19 @@
   // ======== PASSWORD GATE ========
   const gate = document.getElementById('gate');
   const gateInput = document.getElementById('gateInput');
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:';
+
+  // skip gate on localhost or if already authenticated
+  if (isLocal || localStorage.getItem('twww-auth')) {
+    gate.remove();
+  }
 
   gateInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       if (gateInput.value.toLowerCase() === 'bloop') {
+        localStorage.setItem('twww-auth', '1');
         gate.classList.add('unlocked');
+        gate.addEventListener('transitionend', () => gate.remove(), { once: true });
       } else {
         gateInput.classList.add('gate-wrong');
         gateInput.addEventListener('animationend', () => gateInput.classList.remove('gate-wrong'), { once: true });
